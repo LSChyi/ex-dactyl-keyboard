@@ -1387,9 +1387,65 @@
                (mirror [-1 0 0] side-cylinder))
          (rotate (/ π 2) [1 0 0])
          (translate [0 (/ teensy-length 2) (- side-radius)])
-         (translate [0 0 (- 4.0)])
+         (translate [0 0 (- 1.3)])
          (translate [0 0 (- teensy-offset-height)])
-         (key-place 1/2 3/2))))
+         (key-place 1/2 7/4))))
+
+(def stm-inner
+  (->>
+    (hull
+      (->>
+        (cube 25 53 6)
+        (translate [ 0 0 7 ])
+      )
+      (cube 21 53 12)
+    )
+    (translate [ 0 1 -5 ])
+    (key-place 1/2 7/4)
+  )
+)
+
+(def stm-cover
+  (->>
+    (difference
+      (->>
+        (hull
+          (->>
+            (cube 26 57 6)
+            (translate [ 0 0 6 ])
+          )
+          (cube 23 55 12)
+        )
+        (translate [ 0 1 -6 ])
+        (key-place 1/2 7/4)
+      )
+      (->>
+        (cube (+ keyswitch-width 15) (- keyswitch-height 5) 10)
+        (key-place 1/2 1/2)
+      )
+      (->>
+        (cube (+ keyswitch-width 15) (+ keyswitch-height 5) 10)
+        (key-place 1/2 1)
+      )
+      (->>
+        (cube (+ keyswitch-width 15) (- keyswitch-height 5) 10)
+        (key-place 1/2 3/2)
+      )
+      (->>
+        (cube (+ keyswitch-width 15) (+ keyswitch-height 5) 10)
+        (key-place 1/2 2)
+      )
+      (->>
+        (cube (+ keyswitch-width 15) (- keyswitch-height 5) 10)
+        (key-place 1/2 5/2)
+      )
+      (->>
+        (cube (+ keyswitch-width 15) (+ keyswitch-height 5) 10)
+        (key-place 1/2 3)
+      )
+    )
+  )
+)
 
 ;;;;;;;;;;;;;;;;;;
 ;; Final Export ;;
@@ -1398,17 +1454,15 @@
 (def dactyl-bottom-base
   (difference
    (union
-    teensy-cover
-    teensy-support
     (difference
       (union
      bottom-plate
+     stm-cover
      trrs-shell
     screw-hole-holders
         )
-     (hull teensy-cover)
-     ;new-case
-     teensy-cover
+     new-case
+     stm-inner
      screw-nut-holes
      trrs-cutout
      trrs-ring-cutout
