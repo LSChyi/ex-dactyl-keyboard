@@ -20,19 +20,23 @@
 (def mount-height (+ keyswitch-height keyborder))
 
 (def old-single-plate
-  (let [top-wall (->> (cube (+ keyswitch-width keyborder) (/ keyborder 2) plate-thickness)
-                      (translate [0
-                                  (+ (/ (/ keyborder 2) 2) (/ keyswitch-height 2))
-                                  (/ plate-thickness 2)]))
-        left-wall (->> (cube (/ keyborder 2) (+ keyswitch-height keyborder) plate-thickness)
-                       (translate [(+ (/ (/ keyborder 2) 2) (/ keyswitch-width 2))
-                                   0
-                                   (/ plate-thickness 2)]))
-        plate-half (union top-wall left-wall)]
-    (union plate-half
-           (->> plate-half
-                (mirror [1 0 0])
-                (mirror [0 1 0])))))
+  (->> 
+    (difference
+      (->>
+        (cube (+ keyswitch-width keyborder) (+ keyswitch-width keyborder) plate-thickness)
+        (translate [ 0 0 (/ plate-thickness 2) ])
+      )
+      (->>
+        (cube keyswitch-width keyswitch-width plate-thickness)
+        (translate [ 0 0 (/ plate-thickness 2) ])
+      )
+      (->>
+        (cube (- (+ keyswitch-width keyborder) 2) (- (+ keyswitch-width keyborder) 2) (- plate-thickness 1.5))
+        (translate [ 0 0 (/ (- plate-thickness 1.5) 2) ])
+      )
+    )
+  )
+)
 
 (def alps-width 15.6)
 (def alps-notch-width 15.5)
@@ -185,7 +189,7 @@
 ;; Web Connectors ;;
 ;;;;;;;;;;;;;;;;;;;;
 
-(def web-thickness 3.5)
+(def web-thickness 2)
 (def post-size 0.1)
 (def web-post (->> (cube post-size post-size web-thickness)
                    (translate [0 0 (+ (/ web-thickness -2)
@@ -1377,7 +1381,7 @@
    (union key-holes
           connectors
           thumb
-          teensy-clamp
+          ;teensy-clamp
           new-case)
    screw-holes
    ))
