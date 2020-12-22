@@ -133,7 +133,7 @@
         column-offset (cond
                         (= column -1) [0 -3 2.8]
                         (= column 2) [0 2.82 -3.0] ;;was moved -4.5
-                        (>= column 4) [0 -5.8 5.64]
+                        (>= column 4) [0 -11 5.64]
                         :else [0 0 0])
         column-angle (* β (- 2 column))
         placed-shape (->> row-placed-shape
@@ -171,7 +171,7 @@
   (apply union
          (for [column columns
                row rows
-               :when (and (not (and (= column -1) (>= row 3))) (not (and (= column 0) (= row 4))))
+               :when (and (and (not (and (= column -1) (>= row 3))) (not (and (= column 0) (= row 4))) (not (and (>= column 4) (= row 4)))))
                ]
            (->> old-single-plate
                 (key-place column row)))))
@@ -207,7 +207,7 @@
           ;; Row connections
           (for [column (drop-last columns)
                 row rows
-                :when (and (not (and (= column -1) (>= row 3))) (not (and (= column 0) (= row 4))))
+               :when (and (and (not (and (= column -1) (>= row 3))) (not (and (= column 0) (= row 4))) (not (and (>= column 3) (>= row 4)))))
                 ]
             (triangle-hulls
              (key-place (inc column) row web-post-tl)
@@ -218,7 +218,7 @@
           ;; Column connections
           (for [column columns
                 row (drop-last rows)
-                :when (and (not (and (= column -1) (>= row 2))) (not (and (= column 0) (= row 4))))
+                :when (and (and (not (and (= column -1) (>= row 3))) (not (and (= column 0) (= row 4))) (not (and (>= column 4) (>= row 3)))))
                 ]
             (triangle-hulls
              (key-place column row web-post-bl)
@@ -229,7 +229,7 @@
           ;; Diagonal connections
           (for [column (drop-last columns)
                 row (drop-last rows)
-                :when (and (not (and (= column -1) (>= row 3))) (not (and (= column 0) (= row 4))))
+                :when (and (and (not (and (= column -1) (>= row 3))) (not (and (= column 0) (= row 4))) (not (and (>= column 3) (>= row 3)))))
                 ]
             (triangle-hulls
              (key-place column row web-post-br)
@@ -488,7 +488,7 @@
                                     wall-step))]
     (union
      (apply union
-            (for [x (range 2 5)]
+            (for [x (range 2 4)]
               (union
                (hull (place (- x 1/2) 4 (translate [0 1.5 0.5] wall-sphere-bottom-front-top))
                      (place (+ x 1/2) 4 (translate [0 1.5 0.5] wall-sphere-bottom-front-top))
@@ -496,19 +496,36 @@
                      (key-place x 4 web-post-br))
                (hull (place (- x 1/2) 4 (translate [0 1.5 0.5] wall-sphere-bottom-front-top))
                      (key-place x 4 web-post-bl)
-                     (key-place (- x 1) 4 web-post-br)))))
+                     (key-place (- x 1) 4 web-post-br)))
+              ))
+     (hull (place (- 4 1/2) 4 (translate [0 1.5 0.5] wall-sphere-bottom-front-top))
+           (place (+ 4 1/2) 4 (translate [0 1.5 0.5] wall-sphere-bottom-front-top))
+           (key-place 4 3 web-post-bl)
+           (key-place 4 3 web-post-br))
+     (hull (key-place 4 3 web-post-bl)
+           (key-place 3 4 web-post-tr)
+           (key-place 3 3 web-post-br))
+     (hull (key-place 4 3 web-post-bl)
+           (key-place 3 4 web-post-tr)
+           (key-place (- 4 1) 4 web-post-br))
+     (hull (place (- 4 1/2) 4 (translate [0 1.5 0.5] wall-sphere-bottom-front-top))
+           (key-place 4 3 web-post-bl)
+           (key-place (- 4 1) 4 web-post-br))
      (hull (place right-wall-column 4 (translate [-1.5 1.5 0.5] wall-sphere-bottom-front-top))
            (place (- right-wall-column 1) 4 (translate [0 1.5 0.5] wall-sphere-bottom-front-top))
-           (key-place 5 4 web-post-bl)
-           (key-place 5 4 web-post-br))
+           (key-place 5 3 web-post-bl)
+           (key-place 5 3 web-post-br))
      (hull (place (+ 4 1/2) 4 (translate [0 1.5 0.5] wall-sphere-bottom-front-top))
            (place (- right-wall-column 1) 4 (translate [0 1.5 0.5] wall-sphere-bottom-front-top))
-           (key-place 4 4 web-post-br)
-           (key-place 5 4 web-post-bl))
+           (key-place 4 3 web-post-br)
+           (key-place 5 3 web-post-bl))
      (hull (place 0.7 4 (translate [0 1.5 0.5] wall-sphere-bottom-front-top))
            (place 1.5 4 (translate [0 1.5 0.5] wall-sphere-bottom-front-top))
            (key-place 1 4 web-post-bl)
-           (key-place 1 4 web-post-br)))))
+           (key-place 1 4 web-post-br))
+    )
+  )
+)
 
 (def back-wall
   (let [step wall-step
@@ -553,12 +570,12 @@
     (union
           (apply union
             (concat
-             (for [x (range 0 5)]
+             (for [x (range 0 4)]
                (union
                 (hull (place right-wall-column x (translate [-1.5 0 3] (wall-sphere-bottom 1/2 top-sphere-size)))
                       (key-place 5 x web-post-br)
                       (key-place 5 x web-post-tr))))
-             (for [x (range 0 4)]
+             (for [x (range 0 3)]
                (union
                 (hull (place right-wall-column x (translate [-1.5 0 3] (wall-sphere-bottom 1/2 top-sphere-size)))
                       (place right-wall-column (inc x) (translate [-1.5 0 3] (wall-sphere-bottom 1/2 top-sphere-size)))
@@ -569,8 +586,11 @@
                      (place right-wall-column 0.02 (translate [-1.5 -1 3] (wall-sphere-bottom 1 1)))
                      (key-place 5 0 web-post-tr))
                (hull (place right-wall-column 4 (translate [-1.5 0 3] (wall-sphere-bottom 1/2 top-sphere-size)))
+                     (place right-wall-column 3 (translate [-1.5 0 3] (wall-sphere-bottom 1/2 top-sphere-size)))
+                     (key-place 5 3 web-post-br))
+               (hull (place right-wall-column 4 (translate [-1.5 0 3] (wall-sphere-bottom 1/2 top-sphere-size)))
                      (place right-wall-column 4 (translate [-1.5 1.5 0.5] wall-sphere-bottom-front-top))
-                     (key-place 5 4 web-post-br))
+                     (key-place 5 3 web-post-br))
                )])))))
 
 (def left-wall
@@ -1383,7 +1403,7 @@
           thumb
           ;teensy-clamp
           new-case)
-   screw-holes
+   ;screw-holes
    ))
 
 (def dactyl-top-right-case
