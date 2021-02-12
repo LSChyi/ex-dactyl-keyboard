@@ -133,7 +133,7 @@
         column-offset (cond
                         (= column -1) [0 -3 2.8]
                         (= column 2) [0 2.82 -3.0] ;;was moved -4.5
-                        (>= column 4) [0 -11 5.64]
+                        (>= column 4) [0 -13 6.6]
                         :else [0 0 0])
         column-angle (* β (- 2 column))
         placed-shape (->> row-placed-shape
@@ -189,7 +189,7 @@
 ;; Web Connectors ;;
 ;;;;;;;;;;;;;;;;;;;;
 
-(def web-thickness 2)
+(def web-thickness 3.5)
 (def post-size 0.1)
 (def web-post (->> (cube post-size post-size web-thickness)
                    (translate [0 0 (+ (/ web-thickness -2)
@@ -274,11 +274,24 @@
   (thumb-place 0 -1/2 shape))
 
 (defn thumb-2x+1-column [shape]
-  (union (thumb-place 1 -1/2 shape)
+  (union (thumb-place 1 -1/2 
+           (
+             translate [ 0 (* mount-height 0.375) 0 ] shape
+           )
+         )
          (thumb-place 1 1 shape)))
 
+(defn thumb-2x-1-column [shape]
+  (union (thumb-place 2 -1/2 
+           (
+             translate [ 0 (* mount-height -0.375) 0 ] shape
+           )
+         )
+         (thumb-place 2 1 shape)))
+
 (defn thumb-2x+1-bottom-column [shape]
-  (thumb-place 1 -1/2 shape))
+  (thumb-place 1 -1/2 shape)
+  )
 
 (defn thumb-1x-column [shape]
   (union (thumb-place 2 -1 shape)
@@ -289,7 +302,7 @@
   (union
    (thumb-2x-column shape)
    (thumb-2x+1-column shape)
-   (thumb-1x-column shape)))
+   (thumb-2x-1-column shape)))
 
 (defn thumb-bottom-layout [shape]
   (union
@@ -302,17 +315,46 @@
         top-plate (->> (cube mount-width plate-height web-thickness)
                        (translate [0 (/ (+ plate-height mount-height) 2)
                                    (- plate-thickness (/ web-thickness 2))]))
-        stabilizer-cutout (union (->> (cube 14.2 7.5 web-thickness)
-                                      (translate [0.5 12 (- plate-thickness (/ web-thickness 2))])
-                                      (color [1 0 0 1/2]))
-                                 (->> (cube 9 8 web-thickness)
-                                      (translate [0.5 12 (- plate-thickness (/ web-thickness 2))])
-                                      (color [1 0 0 1/2]))
-                                 (->> (cube 16 7.5 web-thickness)
-                                      (translate [0.5 12 (- plate-thickness (/ web-thickness 2) 1.4)])
-                                      (color [1 0 0 1/2])))
         top-plate (difference top-plate)]
     (union top-plate (mirror [0 1 0] top-plate))))
+
+(def double-plates-upper
+  (
+    let [
+      plate-height (/ (- sa-double-length mount-height) 2)
+    ]
+    (->> 
+      (
+        difference
+        (cube mount-width (+ (* mount-height 2) 3) web-thickness)
+        (->>
+          (cube mount-width mount-height (+ web-thickness 1))
+          (translate [ 0 (* mount-height 0.375) 0 ])
+        )
+      )
+      (translate [ 0 0 (- plate-thickness (/ web-thickness 2)) ])
+    )
+  )
+)
+
+(def double-plates-lower
+  (
+    let [
+      plate-height (/ (- sa-double-length mount-height) 2)
+    ]
+    (->> 
+      (
+        difference
+        (cube mount-width (+ (* mount-height 2) 3) web-thickness)
+        (->>
+          (cube mount-width mount-height (+ web-thickness 1))
+          (translate [ 0 (* mount-height -0.375) 0 ])
+        )
+      )
+      (translate [ 0 0 (- plate-thickness (/ web-thickness 2)) ])
+    )
+  )
+)
 
 (def thumbcaps
   (union
@@ -330,12 +372,7 @@
                              (thumb-place column row web-post-tr)
                              (thumb-place (dec column) row web-post-bl)
                              (thumb-place (dec column) row web-post-tl)))
-           (for [column [2] row [0 1]]
-             (triangle-hulls
-              (thumb-place column row web-post-bl)
-              (thumb-place column row web-post-br)
-              (thumb-place column (dec row) web-post-tl)
-              (thumb-place column (dec row) web-post-tr)))))
+           ))
    (let [plate-height (/ (- sa-double-length mount-height) 2)
          thumb-tl (->> web-post-tl
                        (translate [0 plate-height 0]))
@@ -353,29 +390,26 @@
                       (thumb-place 1 -1/2 thumb-tr)
                       (thumb-place 1 -1/2 thumb-br))
 
+      (triangle-hulls (thumb-place 1 -1/2 thumb-tl)
+                      (thumb-place 1 -1/2 thumb-bl)
+                      (thumb-place 2 -1/2 thumb-tr)
+                      (thumb-place 2 -1/2 thumb-br))
+
       ;;Connecting the double to the one above it
       (triangle-hulls (thumb-place 1 -1/2 thumb-tr)
                       (thumb-place 1 -1/2 thumb-tl)
                       (thumb-place 1 1 web-post-br)
                       (thumb-place 1 1 web-post-bl))
+      (triangle-hulls (thumb-place 2 -1/2 thumb-tr)
+                      (thumb-place 2 -1/2 thumb-tl)
+                      (thumb-place 2 1 web-post-br)
+                      (thumb-place 2 1 web-post-bl))
 
       ;;Connecting the 4 with the double in the bottom left
       (triangle-hulls (thumb-place 1 1 web-post-bl)
                       (thumb-place 1 -1/2 thumb-tl)
                       (thumb-place 2 1 web-post-br)
-                      (thumb-place 2 0 web-post-tr))
-
-      ;;Connecting the two singles with the middle double
-      (hull (thumb-place 1 -1/2 thumb-tl)
-            (thumb-place 1 -1/2 thumb-bl)
-            (thumb-place 2 0 web-post-br)
-            (thumb-place 2 -1 web-post-tr))
-      (hull (thumb-place 1 -1/2 thumb-tl)
-            (thumb-place 2 0 web-post-tr)
-            (thumb-place 2 0 web-post-br))
-      (hull (thumb-place 1 -1/2 thumb-bl)
-            (thumb-place 2 -1 web-post-tr)
-            (thumb-place 2 -1 web-post-br))
+                      (thumb-place 2 -1/2 thumb-tr))
 
       ;;Connecting the thumb to everything
       (triangle-hulls (thumb-place 0 -1/2 thumb-br)
@@ -409,7 +443,9 @@
    thumb-connectors
    (thumb-layout (rotate (/ π 2) [0 0 1] old-single-plate))
    (thumb-place 0 -1/2 double-plates)
-   (thumb-place 1 -1/2 double-plates)))
+   (thumb-place 1 -1/2 double-plates-upper)
+   (thumb-place 2 -1/2 double-plates-lower)
+   ))
 
 ;;;;;;;;;;
 ;; Case ;;
@@ -1098,11 +1134,11 @@
                    )
                    (difference
                      (hull
-                       (stand-at #(key-place 5.1 4.2 %))
-                       (stand-top #(key-place 5 4 %))
+                       (stand-at #(key-place 5.1 3.9 %))
+                       (stand-top #(key-place 5 3.7 %))
                      )
-                     (stand-cut #(key-place 5 4 %))
-                     (stand-bump-cut #(key-place 5.1 4.2 %))
+                     (stand-cut #(key-place 5 3.7 %))
+                     (stand-bump-cut #(key-place 5.1 3.9 %))
                    )
                    ])]
      (apply union
@@ -1122,18 +1158,14 @@
 
 (def screw-hole (->> (union
                       (->>
-                        (cylinder 2.5 3.5) (with-fn wall-sphere-n)
-                        (translate [0 0 4])
-                      )
-                      (->>
                         (cylinder 1.5 60)
                         (translate [0 0 19])
                         (with-fn wall-sphere-n)
                       )
                      )))
 
-(def screw-hole-holder (->> (hull (->> (cylinder 2.5 4.5) (translate [0 0 -1]))
-                                  (translate [0 0 -3] (cylinder 8 0.001))
+(def screw-hole-holder (->> (hull (->> (cylinder 2.5 4.5) (translate [0 0 1.7]))
+                                  (translate [0 0 -3] (cylinder 2.5 0.001))
                                   )
                      (translate [0 0 -3])
                      (with-fn wall-sphere-n)))
@@ -1151,21 +1183,21 @@
    (key-place (+ 4 1/2) 1/2 screw-hole)
    (key-place -1 1/2 screw-hole)
    (key-place (+ 4 1/2) (+ 3 1/2) screw-hole)
-   (thumb-place 2 -1/2 screw-hole)))
+   (thumb-place 2 0 screw-hole)))
 
 (def screw-hole-holders
   (union
    (key-place (+ 4 1/2) 1/2 screw-hole-holder)
    (key-place -1 1/2 screw-hole-holder)
    (key-place (+ 4 1/2) (+ 3 1/2) screw-hole-holder)
-   (thumb-place 2 -1/2 screw-hole-holder)))
+   (thumb-place 2 0 screw-hole-holder)))
 
 (def screw-nut-holes
   (union
    (key-place (+ 4 1/2) 1/2 screw-nut-hole)
    (key-place -1 1/2 screw-nut-hole)
    (key-place (+ 4 1/2) (+ 3 1/2) screw-nut-hole)
-   (thumb-place 2 -1/2 screw-nut-hole)))
+   (thumb-place 2 0 screw-nut-hole)))
 
 (defn circuit-cover [width length height]
   (let [cover-sphere-radius 1
@@ -1375,7 +1407,7 @@
     screw-hole-holders
         )
      (hull teensy-cover)
-     new-case
+     ;new-case
      teensy-cover
      screw-nut-holes
      trrs-cutout
@@ -1403,7 +1435,7 @@
           thumb
           ;teensy-clamp
           new-case)
-   ;screw-holes
+   screw-holes
    ))
 
 (def dactyl-top-right-case
